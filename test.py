@@ -5,4 +5,5 @@ np.array([])
 
 # My new commit
 # TODO: Hejhej
-# TODO: min egen branch
+# TODO: min egen branchhh
+# TODO: Fatta python
