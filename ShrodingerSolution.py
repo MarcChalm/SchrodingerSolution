@@ -1,8 +1,8 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 
-# Defining Malfliet-Tjon potential
 
 def debugger(list_of_variables, list_of_variable_names):
 
@@ -13,6 +13,7 @@ def debugger(list_of_variables, list_of_variable_names):
 
         print(f'Variable name:{variable_name}, Value:{variable_value}')
 
+# Defining Malfliet-Tjon potential
 
 def potential_V(r):
     # Realistik nukleon-nukleon potential of Malfliet-Tjon type.
@@ -118,6 +119,7 @@ print(f'Steplengt: {h}')
 r = np.linspace(10.**-16, r_max, num=N)
 Vr = populate_Vr(np.zeros(N), r)
 u = np.zeros(N)
+df = pd.DataFrame()
 
 # Set important parameters
 # Guessing whatever was meintioned in the exercise
@@ -126,7 +128,7 @@ Emax = 0.0
 E = 0.5 * (Emin+Emax)
 max_iter = 100
 continuity_tolerance = 0.000001
-rmp_index = 2600
+rmp_index = 2500
 
 # Itterate over the energi E
 
@@ -146,10 +148,12 @@ for iter in range(max_iter):
     # Init outward integrated wave function
     u_outer = numerov(np.zeros(N), Fvec, 0, h ** 1, rmp_index, h)
     u_out_mp = u_outer[rmp_index]
+    df['u_outer'] = u_outer
 
     # Init inward integrated wave function
     u_inner = numerov(np.zeros(N), Fvec, 0, h ** 1, (N - rmp_index - 2), h, revese=True)
     u_in_mp = u_inner[rmp_index + 1]
+    df['u_inner'] = u_inner
 
     # Scaling factor between ingoing and outgoing wave function
     scale_factor = u_out_mp / u_in_mp
@@ -157,13 +161,18 @@ for iter in range(max_iter):
     # Match the height and create the full vector u
     u = u_outer + scale_factor * u_inner
 
+    df['u'] = u
+
     # Calculate the discontinuity of the derivitiv of mp
     matching_numerator = (u[rmp_index] - h) + (u[rmp_index+1] + h) - u[rmp_index] * (2 + (h ** 2) * Fvec[rmp_index])
     matching_denominator = h
     matching = matching_numerator / matching_denominator
 
-
-
+    #dx = np.gradient(u)
+    #df['dx'] = dx
+    #u_outer_dx = dx[rmp_index]
+    #u_inner_dx = dx[rmp_index + 1]
+    #matching = (u_inner_dx - u_outer_dx)
 
     # Debugging
     print('Testing')
