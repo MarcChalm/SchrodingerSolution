@@ -66,6 +66,7 @@ def populate_Fvec(Fvec, Vr, E):
     K = 2 * my / hbar ** 2
 
     for i in range(Fvec.size):
+
         Fvec[i] = K * (Vr[i] - E)
 
     return Fvec
@@ -90,9 +91,9 @@ def numerov(u, Fvec, u_0, u_1, index, steplength, revese=False):
         F_0 = Fvec[i]
         F_neg_1 = Fvec[i - 1]
 
-        outward_numerator = u_0 * (2 + (5 / 6) * (h ** 2) * F_0) - u_neg_1 * (1 - (1 / 12) * (h ** 2) * F_neg_1)
-        outward_denominator = (1 - (1 / 12) * (h ** 2) * F_1)
-        next_step = outward_numerator / outward_denominator
+        numerov_numerator = u_0 * (2 + (5 / 6) * (h ** 2) * F_0) - u_neg_1 * (1 - (1 / 12) * (h ** 2) * F_neg_1)
+        numerov_denominator = (1 - (1 / 12) * (h ** 2) * F_1)
+        next_step = numerov_numerator / numerov_denominator
         u[i + 1] = next_step
 
     # For when calculating inner integral
@@ -101,6 +102,33 @@ def numerov(u, Fvec, u_0, u_1, index, steplength, revese=False):
 
     else:
         return u
+
+
+def numerov_inner(u, Fvec, u_0, u_1, index, steplength):
+
+    last_index = u.size - 1
+    u[last_index] = u_0
+    u[last_index - 1] = u_1
+    h = steplength
+
+    for i in range(last_index-1, index, -1):
+
+        u_0 = u[i]
+        u_neg_1 = u[i + 1]
+
+        F_1 = Fvec[i + 1]
+        F_0 = Fvec[i]
+        F_neg_1 = Fvec[i - 1]
+
+        # TODO: Flipp all signs? did  it above instead
+
+        numerov_numerator = u_0 * (2 + (5 / 6) * (h ** 2) * F_0) - u_neg_1 * (1 - (1 / 12) * (h ** 2) * F_neg_1)
+        numerov_denominator = (1 - (1 / 12) * (h ** 2) * F_1)
+        next_step = numerov_numerator / numerov_denominator
+        u[i + 1] = next_step
+        print(next_step)
+
+    return u
 
 
 # Declaring constants
@@ -127,8 +155,8 @@ Emin = min(Vr)
 Emax = 0.0
 E = 0.5 * (Emin+Emax)
 max_iter = 100
-continuity_tolerance = 0.000001
-rmp_index = 2500
+continuity_tolerance = 0.00000001
+rmp_index =1900
 
 # Itterate over the energi E
 
@@ -152,8 +180,12 @@ for iter in range(max_iter):
 
     # Init inward integrated wave function
     u_inner = numerov(np.zeros(N), Fvec, 0, h ** 1, (N - rmp_index - 2), h, revese=True)
+    #u_inner = numerov_inner(np.zeros(N), Fvec, 0, h ** 1, rmp_index, h)
     u_in_mp = u_inner[rmp_index + 1]
     df['u_inner'] = u_inner
+
+    # Correcting u[rmp_index]
+    #u[rmp_index] = u[rmp_index] / 2
 
     # Scaling factor between ingoing and outgoing wave function
     scale_factor = u_out_mp / u_in_mp
@@ -164,19 +196,18 @@ for iter in range(max_iter):
     df['u'] = u
 
     # Calculate the discontinuity of the derivitiv of mp
-    matching_numerator = (u[rmp_index] - h) + (u[rmp_index+1] + h) - u[rmp_index] * (2 + (h ** 2) * Fvec[rmp_index])
+
+    # TODO: Is this correct?
+    matching_numerator = (u[rmp_index - 2]) + (u[rmp_index + 1]) - u[rmp_index] * (2 + (h ** 2) * Fvec[rmp_index])
     matching_denominator = h
     matching = matching_numerator / matching_denominator
 
-    #dx = np.gradient(u)
+    #dx = np.gradient(u, h)
     #df['dx'] = dx
     #u_outer_dx = dx[rmp_index]
     #u_inner_dx = dx[rmp_index + 1]
     #matching = (u_inner_dx - u_outer_dx)
 
-    # Debugging
-    print('Testing')
-    debugger([E, continuity_tolerance, matching], ['E', 'continuity_tolerance', 'matching'])
 
     if abs(matching) < continuity_tolerance:
         # Break the loop
@@ -191,6 +222,10 @@ for iter in range(max_iter):
 
     # Calculating E for the next iteration.
     E = 0.5 * (Emax + Emin)
+
+# Debugging
+print('Testing')
+debugger([E, continuity_tolerance, matching], ['E', 'continuity_tolerance', 'matching'])
 
 plt.plot(u)
 plt.show()
