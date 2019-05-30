@@ -134,9 +134,9 @@ def numerov_inner(u, Fvec, u_0, u_1, index, steplength):
 # Declaring constants
 
 # Grid in fm
-r_max = 20.0
+r_max = 35.0
 # Number of steps
-N = 20000
+N = 35000
 # Step lengt
 h = r_max / N
 
@@ -156,7 +156,7 @@ Emax = 0.0
 E = 0.5 * (Emin+Emax)
 max_iter = 100
 continuity_tolerance = 0.00000001
-rmp_index =1900
+rmp_index = 2500
 
 # Itterate over the energi E
 
@@ -198,15 +198,15 @@ for iter in range(max_iter):
     # Calculate the discontinuity of the derivitiv of mp
 
     # TODO: Is this correct?
-    matching_numerator = (u[rmp_index - 2]) + (u[rmp_index + 1]) - u[rmp_index] * (2 + (h ** 2) * Fvec[rmp_index])
-    matching_denominator = h
-    matching = matching_numerator / matching_denominator
+    #matching_numerator = (u[rmp_index - 1]) + (u[rmp_index + 1]) - u[rmp_index] * (2 + (h ** 2) * Fvec[rmp_index])
+    #matching_denominator = h
+    #matching = matching_numerator / matching_denominator
 
-    #dx = np.gradient(u, h)
-    #df['dx'] = dx
-    #u_outer_dx = dx[rmp_index]
-    #u_inner_dx = dx[rmp_index + 1]
-    #matching = (u_inner_dx - u_outer_dx)
+    dx = np.gradient(u, h)
+    df['dx'] = dx
+    u_outer_dx = dx[rmp_index]
+    u_inner_dx = dx[rmp_index + 1]
+    matching = (u_inner_dx - u_outer_dx)
 
 
     if abs(matching) < continuity_tolerance:
@@ -227,7 +227,7 @@ for iter in range(max_iter):
 print('Testing')
 debugger([E, continuity_tolerance, matching], ['E', 'continuity_tolerance', 'matching'])
 
-plt.plot(u)
+plt.plot(r[0:20000], u[0:20000])
 plt.show()
 
 # After the code works:
