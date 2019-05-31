@@ -104,39 +104,12 @@ def numerov(u, Fvec, u_0, u_1, index, steplength, revese=False):
         return u
 
 
-def numerov_inner(u, Fvec, u_0, u_1, index, steplength):
-
-    last_index = u.size - 1
-    u[last_index] = u_0
-    u[last_index - 1] = u_1
-    h = steplength
-
-    for i in range(last_index-1, index, -1):
-
-        u_0 = u[i]
-        u_neg_1 = u[i + 1]
-
-        F_1 = Fvec[i + 1]
-        F_0 = Fvec[i]
-        F_neg_1 = Fvec[i - 1]
-
-        # TODO: Flipp all signs? did  it above instead
-
-        numerov_numerator = u_0 * (2 + (5 / 6) * (h ** 2) * F_0) - u_neg_1 * (1 - (1 / 12) * (h ** 2) * F_neg_1)
-        numerov_denominator = (1 - (1 / 12) * (h ** 2) * F_1)
-        next_step = numerov_numerator / numerov_denominator
-        u[i + 1] = next_step
-        print(next_step)
-
-    return u
-
-
 # Declaring constants
 
 # Grid in fm
-r_max = 35.0
+r_max = 40.0
 # Number of steps
-N = 35000
+N = 40000
 # Step lengt
 h = r_max / N
 
@@ -155,8 +128,8 @@ Emin = min(Vr)
 Emax = 0.0
 E = 0.5 * (Emin+Emax)
 max_iter = 100
-continuity_tolerance = 0.00000001
-rmp_index = 2500
+continuity_tolerance = 0.0000000001
+rmp_index = 1000
 
 # Itterate over the energi E
 
@@ -226,6 +199,10 @@ for iter in range(max_iter):
 # Debugging
 print('Testing')
 debugger([E, continuity_tolerance, matching], ['E', 'continuity_tolerance', 'matching'])
+
+u = u / (np.sum(u)*10/u.size)
+
+print(np.sum(u))
 
 plt.plot(r[0:20000], u[0:20000])
 plt.show()
